@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  OWNER
+  INSTRUCTOR
+  STUDENT
+  PARENT
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PRO
+}
+
+enum EmotionType {
+  FRUSTRATED
+  CONFUSED
+  NEUTRAL
+  INTERESTED
+  CONFIDENT
+  EXCITED
+}
+
+model Academy {
+  id               String           @id @default(cuid())
+  name             String
+  subscriptionTier SubscriptionTier @default(FREE)
+  maxStudents      Int              @default(30)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  users       User[]
+  classes     Class[]
+  inviteCodes InviteCode[]
+
+  @@map("academies")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  authId    String   @unique
+  email     String   @unique
+  name      String
+  role      UserRole
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  academyId String?
+  academy   Academy? @relation(fields: [academyId], references: [id])
+
+  parentId String?
+  parent   User?   @relation("ParentChild", fields: [parentId], references: [id])
+  children User[]  @relation("ParentChild")
+
+  enrollments      ClassEnrollment[]
+  chatSessions     ChatSession[]
+  badges           StudentBadge[]
+  weeklyReports    WeeklyReport[]
+  churnPredictions ChurnPrediction[]
+  emotionSnapshots EmotionSnapshot[]
+  instructorOf     Class[]           @relation("ClassInstructor")
+
+  @@map("users")
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  subject     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  academyId String
+  academy   Academy @relation(fields: [academyId], references: [id])
+
+  instructorId String
+  instructor   User   @relation("ClassInstructor", fields: [instructorId], references: [id])
+
+  enrollments ClassEnrollment[]
+
+  @@map("classes")
+}
+
+model ClassEnrollment {
+  id         String   @id @default(cuid())
+  enrolledAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  classId String
+  class   Class  @relation(fields: [classId], references: [id])
+
+  @@unique([studentId, classId])
+  @@map("class_enrollments")
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String?
+  subject   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messages ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  emotionAnalysis EmotionAnalysis?
+
+  @@map("chat_messages")
+}
+
+model EmotionAnalysis {
+  id         String      @id @default(cuid())
+  emotion    EmotionType
+  confidence Float
+  reasoning  String?
+  createdAt  DateTime    @default(now())
+
+  messageId String      @unique
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("emotion_analyses")
+}
+
+model EmotionSnapshot {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  emotions  Json
+  avgScore  Float
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@map("emotion_snapshots")
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  icon        String
+  condition   Json
+
+  studentBadges StudentBadge[]
+
+  @@map("badges")
+}
+
+model StudentBadge {
+  id       String   @id @default(cuid())
+  earnedAt DateTime @default(now())
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  badgeId String
+  badge   Badge  @relation(fields: [badgeId], references: [id])
+
+  @@unique([studentId, badgeId])
+  @@map("student_badges")
+}
+
+model WeeklyReport {
+  id        String   @id @default(cuid())
+  weekStart DateTime @db.Date
+  content   Json
+  summary   String
+  createdAt DateTime @default(now())
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, weekStart])
+  @@map("weekly_reports")
+}
+
+model ChurnPrediction {
+  id          String   @id @default(cuid())
+  riskScore   Float
+  factors     Json
+  explanation String?
+  createdAt   DateTime @default(now())
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  @@map("churn_predictions")
+}
+
+model InviteCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  role      UserRole
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  academyId String
+  academy   Academy @relation(fields: [academyId], references: [id])
+
+  @@map("invite_codes")
+}
