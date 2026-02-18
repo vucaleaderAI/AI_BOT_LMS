@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { anthropic } from "@/lib/ai/claude-client";
+import { ai, toGeminiContents } from "@/lib/ai/gemini-client";
 import { TUTOR_SYSTEM_PROMPT } from "@/lib/ai/prompts/tutor";
 
 export async function POST(request: NextRequest) {
@@ -63,12 +63,14 @@ export async function POST(request: NextRequest) {
     }));
     history.push({ role: "user", content: message });
 
-    // Claude API 스트리밍 호출
-    const stream = await anthropic.messages.stream({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: TUTOR_SYSTEM_PROMPT,
-      messages: history,
+    // Gemini API 스트리밍 호출
+    const stream = await ai.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: TUTOR_SYSTEM_PROMPT,
+        maxOutputTokens: 1024,
+      },
+      contents: toGeminiContents(history),
     });
 
     // ReadableStream으로 변환
@@ -78,12 +80,9 @@ export async function POST(request: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              const text = event.delta.text;
+          for await (const chunk of stream) {
+            const text = chunk.text;
+            if (text) {
               fullResponse += text;
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
@@ -136,13 +135,12 @@ export async function POST(request: NextRequest) {
 
 async function analyzeEmotion(userMessage: string, messageId: string) {
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 200,
-      messages: [
-        {
-          role: "user",
-          content: `다음 학생의 메시지를 분석하여 감정 상태를 JSON으로 반환하세요.
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        maxOutputTokens: 200,
+      },
+      contents: `다음 학생의 메시지를 분석하여 감정 상태를 JSON으로 반환하세요.
 
 감정 유형: FRUSTRATED(좌절), CONFUSED(혼란), NEUTRAL(평범), INTERESTED(흥미), CONFIDENT(자신감), EXCITED(신남)
 
@@ -150,11 +148,9 @@ async function analyzeEmotion(userMessage: string, messageId: string) {
 
 반드시 아래 JSON 형식으로만 응답하세요:
 {"emotion": "EMOTION_TYPE", "confidence": 0.0~1.0, "reasoning": "판단 근거 한 줄"}`,
-        },
-      ],
     });
 
-    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    const text = response.text ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return;
 

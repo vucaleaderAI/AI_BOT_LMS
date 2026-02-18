@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { anthropic } from "@/lib/ai/claude-client";
+import { ai } from "@/lib/ai/gemini-client";
 
 export async function POST() {
   try {
@@ -82,15 +82,14 @@ export async function POST() {
       let explanation = null;
       if (riskScore >= 0.5) {
         try {
-          const res = await anthropic.messages.create({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 100,
-            messages: [{
-              role: "user",
-              content: `학생 "${student.name}"의 이탈 위험 요인: ${factors.join(", ")}. 원장에게 한 줄로 요약해주세요. 한국어로.`,
-            }],
+          const res = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            config: {
+              maxOutputTokens: 100,
+            },
+            contents: `학생 "${student.name}"의 이탈 위험 요인: ${factors.join(", ")}. 원장에게 한 줄로 요약해주세요. 한국어로.`,
           });
-          explanation = res.content[0].type === "text" ? res.content[0].text : null;
+          explanation = res.text ?? null;
         } catch {
           explanation = factors.join(", ");
         }

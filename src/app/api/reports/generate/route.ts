@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { anthropic } from "@/lib/ai/claude-client";
+import { ai } from "@/lib/ai/gemini-client";
 import { WEEKLY_REPORT_PROMPT } from "@/lib/ai/prompts/tutor";
 
 export async function POST(request: NextRequest) {
@@ -78,13 +78,15 @@ ${messages.slice(-20).map((m) => `[${m.role}]: ${m.content.substring(0, 200)}`).
 위 데이터를 바탕으로 학부모용 주간 리포트를 JSON 형식으로 작성하세요:
 {"summary": "전체 요약 2-3문장", "highlights": "잘한 점", "improvements": "개선 방향", "parentTips": "가정 학습 팁", "emotionTrend": "감정 트렌드 요약"}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-pro",
+      config: {
+        maxOutputTokens: 1024,
+      },
+      contents: prompt,
     });
 
-    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    const text = response.text ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
 
     let content = {

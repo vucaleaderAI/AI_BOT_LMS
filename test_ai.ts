@@ -2,10 +2,10 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 
 async function test() {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     console.log('Checking API Key:', apiKey ? `Present (${apiKey.slice(0, 10)}...)` : 'Missing');
 
     if (!apiKey) {
@@ -13,16 +13,15 @@ async function test() {
         return;
     }
 
-    const anthropic = new Anthropic({ apiKey });
+    const ai = new GoogleGenAI({ apiKey });
 
-    console.log('Testing Anthropic client...');
+    console.log('Testing Gemini client...');
     try {
-        const message = await anthropic.messages.create({
-            max_tokens: 100,
-            messages: [{ role: 'user', content: 'Hello' }],
-            model: 'claude-3-haiku-20240307',
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: 'Hello, say hi in one sentence.',
         });
-        console.log('Response:', message.content[0].type === 'text' ? message.content[0].text : 'No text');
+        console.log('Response:', response.text);
     } catch (error) {
         console.error('Error:', error);
     }
