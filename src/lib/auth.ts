@@ -23,6 +23,15 @@ export async function requireUser(allowedRoles?: string[]) {
     redirect("/login");
   }
 
+  if (user.role !== "OWNER") {
+    if (user.status === "PENDING") {
+      redirect("/pending");
+    }
+    if (user.status === "REJECTED") {
+      redirect("/rejected");
+    }
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     redirect("/dashboard");
   }

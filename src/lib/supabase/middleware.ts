@@ -30,7 +30,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 인증이 필요한 페이지 보호
-  const protectedPaths = ["/dashboard", "/owner", "/instructor", "/student", "/parent", "/complete-profile"];
+  const protectedPaths = ["/dashboard", "/owner", "/instructor", "/student", "/parent", "/complete-profile", "/pending"];
   const isProtected = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

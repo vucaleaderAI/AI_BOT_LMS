@@ -19,6 +19,8 @@ import {
   GraduationCap,
   Menu,
   X,
+  UserCheck,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -38,14 +40,17 @@ const navByRole: Record<string, NavItem[]> = {
   ],
   INSTRUCTOR: [
     { label: "대시보드", href: "/instructor", icon: LayoutDashboard },
+    { label: "내 강좌", href: "/instructor/courses", icon: BookOpen },
     { label: "학급 관리", href: "/instructor/classes", icon: GraduationCap },
     { label: "학생 모니터링", href: "/instructor/students", icon: Users },
     { label: "알림", href: "/instructor/alerts", icon: Bell },
   ],
   OWNER: [
     { label: "대시보드", href: "/owner", icon: LayoutDashboard },
+    { label: "과정 관리", href: "/owner/courses", icon: BookOpen },
     { label: "이탈 예측", href: "/owner/churn", icon: BarChart3 },
     { label: "강사 관리", href: "/owner/instructors", icon: Users },
+    { label: "멤버 관리", href: "/owner/members", icon: UserCheck },
     { label: "초대코드", href: "/owner/invites", icon: Settings },
     { label: "분석", href: "/owner/analytics", icon: BarChart3 },
   ],

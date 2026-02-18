@@ -18,6 +18,16 @@ export default async function DashboardRedirect() {
     redirect("/complete-profile");
   }
 
+  // 승인 대기 또는 거절 상태 처리
+  if (dbUser.role !== "OWNER") {
+    if (dbUser.status === "PENDING") {
+      redirect("/pending");
+    }
+    if (dbUser.status === "REJECTED") {
+      redirect("/rejected");
+    }
+  }
+
   // 역할별 리다이렉트
   switch (dbUser.role) {
     case "OWNER":

@@ -30,15 +30,25 @@ enum EmotionType {
   EXCITED
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
 model Academy {
   id               String           @id @default(cuid())
   name             String
+  code             String           @unique // 학원 고유 코드 (학생/강사가 가입 시 입력)
   subscriptionTier SubscriptionTier @default(FREE)
   maxStudents      Int              @default(30)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  users       User[]
+  ownerId     String @unique
+  owner       User   @relation("AcademyOwner", fields: [ownerId], references: [id])
+
+  users       User[] @relation("AcademyMembers")
   classes     Class[]
   inviteCodes InviteCode[]
 
@@ -46,17 +56,20 @@ model Academy {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  authId    String   @unique
-  email     String   @unique
+  id        String     @id @default(cuid())
+  authId    String     @unique
+  email     String     @unique
   name      String
   role      UserRole
+  status    UserStatus @default(PENDING) // 승인 대기 상태 추가
   avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   academyId String?
-  academy   Academy? @relation(fields: [academyId], references: [id])
+  academy   Academy? @relation("AcademyMembers", fields: [academyId], references: [id])
+
+  ownedAcademy Academy? @relation("AcademyOwner") // 원장일 경우 소유한 학원
 
   parentId String?
   parent   User?   @relation("ParentChild", fields: [parentId], references: [id])
@@ -84,8 +97,8 @@ model Class {
   academyId String
   academy   Academy @relation(fields: [academyId], references: [id])
 
-  instructorId String
-  instructor   User   @relation("ClassInstructor", fields: [instructorId], references: [id])
+  instructorId String?
+  instructor   User?   @relation("ClassInstructor", fields: [instructorId], references: [id])
 
   enrollments ClassEnrollment[]
 

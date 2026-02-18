@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Claude API 스트리밍 호출
     const stream = await anthropic.messages.stream({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-3-haiku-20240307",
       max_tokens: 1024,
       system: TUTOR_SYSTEM_PROMPT,
       messages: history,
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 async function analyzeEmotion(userMessage: string, messageId: string) {
   try {
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-3-haiku-20240307",
       max_tokens: 200,
       messages: [
         {

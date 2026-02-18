@@ -39,7 +39,12 @@ export default async function OwnerDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{academy?.name} 대시보드</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">{academy?.name} 대시보드</h1>
+          <Badge variant="outline" className="text-sm px-3 py-1 border-primary text-primary">
+            학원 코드: {academy?.code}
+          </Badge>
+        </div>
         <p className="text-muted-foreground">학원 전체 현황을 확인하세요</p>
       </div>
 

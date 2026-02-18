@@ -55,7 +55,7 @@ export default function CompleteProfilePage() {
                 body: JSON.stringify({
                     name: form.name,
                     role: form.role,
-                    inviteCode: form.inviteCode || undefined,
+                    academyCode: form.inviteCode || undefined,
                     academyName: form.academyName || undefined,
                 }),
             });
@@ -112,8 +112,8 @@ export default function CompleteProfilePage() {
                                         type="button"
                                         onClick={() => setForm({ ...form, role: role.value })}
                                         className={`rounded-lg border p-3 text-left text-sm transition-colors ${form.role === role.value
-                                                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                                : "hover:bg-slate-50"
+                                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                            : "hover:bg-slate-50"
                                             }`}
                                     >
                                         <div className="font-medium">{role.label}</div>
@@ -148,17 +148,20 @@ export default function CompleteProfilePage() {
                             </div>
                         )}
 
-                        {/* 강사/학생/학부모: 초대코드 입력 */}
+                        {/* 강사/학생/학부모: 학원 코드 입력 */}
                         {needsInviteCode && (
                             <div className="space-y-2">
-                                <label htmlFor="invite-code" className="text-sm font-medium">초대코드</label>
+                                <label htmlFor="invite-code" className="text-sm font-medium">학원 코드</label>
                                 <Input
                                     id="invite-code"
-                                    placeholder="원장님에게 받은 코드"
+                                    placeholder="원장님에게 받은 8자리 코드"
                                     value={form.inviteCode}
-                                    onChange={(e) => setForm({ ...form, inviteCode: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, inviteCode: e.target.value.toUpperCase() })}
                                     required
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    * 학원 코드를 모르면 가입할 수 없습니다.
+                                </p>
                             </div>
                         )}
 
