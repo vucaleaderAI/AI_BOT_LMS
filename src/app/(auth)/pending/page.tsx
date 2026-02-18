@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Clock, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 
-export default function PendingApproval() {
+function PendingContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const academyCode = searchParams.get("code");
@@ -55,5 +56,13 @@ export default function PendingApproval() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function PendingApproval() {
+    return (
+        <Suspense>
+            <PendingContent />
+        </Suspense>
     );
 }
