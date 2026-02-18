@@ -29,14 +29,17 @@ export default function LoginPage() {
       });
 
       if (authError) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+        console.error("Auth error:", authError);
+        setError(`이메일 또는 비밀번호가 올바르지 않습니다. (${authError.message})`);
         return;
       }
 
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      setError("로그인 중 오류가 발생했습니다.");
+    } catch (err) {
+      console.error("Login error:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`로그인 중 오류가 발생했습니다: ${message}`);
     } finally {
       setLoading(false);
     }
