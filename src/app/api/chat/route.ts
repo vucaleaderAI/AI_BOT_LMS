@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Claude API 스트리밍 호출
     const stream = await anthropic.messages.stream({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: TUTOR_SYSTEM_PROMPT,
       messages: history,
@@ -126,14 +126,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Chat error:", error);
-    return new Response("Internal server error", { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
 async function analyzeEmotion(userMessage: string, messageId: string) {
   try {
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       messages: [
         {
