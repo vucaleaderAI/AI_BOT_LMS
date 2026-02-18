@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getCurrentUser();
@@ -13,7 +13,7 @@ export async function POST(
             return NextResponse.json({ error: "Access Denied" }, { status: 403 });
         }
 
-        const { id: courseId } = params;
+        const { id: courseId } = await params;
         const body = await request.json();
         const { studentId } = body;
 
@@ -61,7 +61,7 @@ export async function POST(
 
         return NextResponse.json({ enrollment });
     } catch (error) {
-        if (error.code === "P2002") {
+        if (error instanceof Error && 'code' in error && (error as { code: string }).code === "P2002") {
             return NextResponse.json(
                 { error: "Student is already enrolled in this course" },
                 { status: 400 }

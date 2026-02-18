@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: String } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getCurrentUser();
@@ -13,7 +13,7 @@ export async function PUT(
             return NextResponse.json({ error: "Access Denied" }, { status: 403 });
         }
 
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const { name, description, instructorId } = body;
 
@@ -38,7 +38,7 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: String } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user = await getCurrentUser();
@@ -46,7 +46,7 @@ export async function DELETE(
             return NextResponse.json({ error: "Access Denied" }, { status: 403 });
         }
 
-        const { id } = params;
+        const { id } = await params;
 
         await prisma.class.delete({
             where: { id: id as string, academyId: user.academyId },
